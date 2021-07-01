@@ -1,0 +1,39 @@
+﻿@* page"/" указывает, что данная страница/представление Razor будет обрабатывать запросы к корню приложения*@
+@page "/"
+
+@*определение пространства имен страницы razor view*@
+@namespace WebCalculator.Pages
+
+@*подключение тегхелперов*@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+
+
+@{
+    Layout = null;
+}
+
+@*стандартный html код*@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Calculator</title>
+    <base href="~/" />
+</head>
+<body>
+       
+
+
+    @*подключение компонента*@
+    <app>
+        
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
+    </app>
+
+
+    @*установка подключения SignalR с сервером*@
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>
