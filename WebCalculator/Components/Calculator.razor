@@ -2,126 +2,138 @@
 @using WebCalculator.Models
 @using System;
 @using System.Text;
-@using WebCalculator.Services
 <div>
-    <div class="calculator_previous_main_output">
+    <div class="calculator_previous_main_output">  
         @historyString
     </div>
-    <div value="123" class="calculator_main_output">
+    <div value="123" class="calculator_main_output">  
         @inputString
     </div>
     <div class="wrapper">
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.Reverse))" class="calculator_button">1/x</button>
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.Square))" class="calculator_button">x^2</button>
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.SquareRoot))" class="calculator_button">sqrt(x)</button>
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.Division))" class="calculator_button">/</button>
+        <button @onclick="(() => OnOneArgumentalOperationClick(new Reverse()))" class="calculator_button calculator_operation_button">1/x</button>
+        <button @onclick="(() => OnOneArgumentalOperationClick(new Square()))" class="calculator_button calculator_operation_button">x^2</button>
+        <button @onclick="(() => OnOneArgumentalOperationClick(new SquareRoot()))" class="calculator_button calculator_operation_button">sqrt(x)</button>
+        <button @onclick="(() => OnBiargumentalOperationClick(new Division()))" class="calculator_button calculator_operation_button">/</button>
     </div>
     <div class="wrapper">
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Seven, 7))" class="calculator_button">7</button>
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Eight, 8))" class="calculator_button">8</button>
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Nine, 9))" class="calculator_button">9</button>
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.Multiplication))" class="calculator_button">*</button>
+        <button @onclick="(() => OnDigitClick('7'))" class="calculator_button">7</button>
+        <button @onclick="(() => OnDigitClick('8'))" class="calculator_button">8</button>
+        <button @onclick="(() => OnDigitClick('9'))" class="calculator_button">9</button>
+        <button @onclick="(() => OnBiargumentalOperationClick(new Multiplication()))" class="calculator_button calculator_operation_button">*</button>
     </div>
     <div class="wrapper">
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Four, 4))" class="calculator_button">4</button>
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Five, 5))" class="calculator_button">5</button>
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Six, 6))" class="calculator_button">6</button>
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.Difference))" class="calculator_button">-</button>
+        <button @onclick="(() => OnDigitClick('4'))" class="calculator_button">4</button>
+        <button @onclick="(() => OnDigitClick('5'))" class="calculator_button">5</button>
+        <button @onclick="(() => OnDigitClick('6'))" class="calculator_button">6</button>
+        <button @onclick="(() => OnBiargumentalOperationClick(new Difference()))" class="calculator_button calculator_operation_button">-</button>
     </div>
     <div class="wrapper">
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.One, 1))" class="calculator_button">1</button>
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Two, 2))" class="calculator_button">2</button>
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Three, 3))" class="calculator_button">3</button>
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.Sum))" class="calculator_button">+</button>
+        <button @onclick="(() => OnDigitClick('1'))" class="calculator_button">1</button>
+        <button @onclick="(() => OnDigitClick('2'))" class="calculator_button">2</button>
+        <button @onclick="(() => OnDigitClick('3'))" class="calculator_button">3</button>
+        <button @onclick="(() => OnBiargumentalOperationClick(new Sum()))" class="calculator_button calculator_operation_button">+</button>
     </div>
     <div class="wrapper">
-        <button @onclick="@(() => OnDigitButtonClick(CalculatorButtons.Zero, 0))" class="calculator_button">0</button>
-        <button @onclick="@(() => OnCommaButtonClick())" class="calculator_button">,</button>
-        <button @onclick="@(() => GetResult())" class="calculator_button equally_button">=</button>
-        <button @onclick="@(() => OnOperationButtonClick(CalculatorButtons.Cancel))" class="calculator_button">delete</button>
+        <button @onclick="(() => OnDigitClick('0'))" class="calculator_button">0</button>
+        <button @onclick="(() => OnDigitClick(','))" class="calculator_button">,</button>
+        <button @onclick="(() => OnCalculateClick())" class="calculator_button equally_button">=</button>
+        <button @onclick="(() => OnDeleteClick())" class="calculator_button calculator_operation_button">delete</button>
     </div>
 </div>
 
 @code{    
-    private bool isFirstInput = true;
-
-
-    private ICalculatorService calculatorService = CalculatorService.GetCalculatorService();
+    private ICalculator calculator = new Models.Calculator();
 
     private StringBuilder inputString = new StringBuilder("0");
-    private StringBuilder historyString = new StringBuilder();
-
+    private StringBuilder historyString = new StringBuilder("0");
+    
     private double firstArgument = 0;
-    private double secondArgument = 0;
-    private double result = 0;
+    private double? secondArgument = null;
 
-    private CalculatorButtons currentOperation;
+    private bool isFirstInput = true;
+}
 
-    private void OnOperationButtonClick(CalculatorButtons buttonValue)
+@code{
+    private void OnDigitClick(char digit)
     {
-        firstArgument = double.Parse(inputString.ToString());
-        currentOperation = buttonValue;
+        if (digit == ',' && inputString.ToString().Contains(","))
+            return;
+
+        if(isFirstInput && digit != ',')
+        {
+            inputString.Clear().Append(digit);
+        }
+        else
+        {
+            inputString.Append(digit);
+        }
+        isFirstInput = false;
+    }
+
+    private void OnBiargumentalOperationClick(IBiargumentalOperation operation)
+    {
+        double.TryParse(inputString.ToString(), out firstArgument);
+
         inputString.Clear();
 
-        string operationMark = "";
-        switch (currentOperation)
+        historyString.Clear().Append(firstArgument.ToString()).Append(" ").Append(operation.GetSymbolString()).Append(" ");
+
+        calculator.CurrentOperation = operation;
+    }
+
+    private void OnOneArgumentalOperationClick(IOneargumentalOperation operation)
+    {
+        inputString.Clear();
+
+        //to do
+        operation.Argument = firstArgument;
+
+        calculator.CurrentOperation = operation;
+        firstArgument = calculator.Calculate();
+
+        inputString = new StringBuilder(firstArgument.ToString());
+        historyString = new StringBuilder(calculator.CurrentOperation.ToString());
+
+        isFirstInput = true;
+    }
+
+    private void OnCalculateClick()
+    {
+        double secondArgumentNotNull;
+
+        if(!double.TryParse(inputString.ToString(), out secondArgumentNotNull))
         {
-            case CalculatorButtons.Multiplication:
-                operationMark = "*";
-                break;
-            case CalculatorButtons.Division:
-                operationMark = "/";
-                break;
-            case CalculatorButtons.Difference:
-                operationMark = "-";
-                break;
-            case CalculatorButtons.Sum:
-                operationMark = "+";
-                break;
+            secondArgument = firstArgument;
         }
-        historyString.Clear().Append(firstArgument.ToString()).Append(" ").Append(operationMark).Append(" ");
-
-    }
-
-    private void OnDigitButtonClick(CalculatorButtons buttonValue, int value)
-    {
-        if (isFirstInput)
+        else
         {
-            inputString.Clear();
-            isFirstInput = false;
+            secondArgument = secondArgumentNotNull;
         }
 
-        inputString.Append(value.ToString());
-    }
-
-    private void OnCommaButtonClick()
-    {
-        inputString.Append(",");
-    }
-
-    private void GetResult()
-    {
-        if (true)
+        if(calculator.CurrentOperation is IOneargumentalOperation)
         {
-            secondArgument = double.Parse(inputString.ToString());
-            switch (currentOperation)
-            {
-                case CalculatorButtons.Multiplication:
-                    result = calculatorService.Multiplication(firstArgument, secondArgument);
-                    break;
-                case CalculatorButtons.Division:
-                    result = calculatorService.Division(firstArgument, secondArgument);
-                    break;
-                case CalculatorButtons.Difference:
-                    result = calculatorService.Difference(firstArgument, secondArgument);
-                    break;
-                case CalculatorButtons.Sum:
-                    result = calculatorService.Sum(firstArgument, secondArgument);
-                    break;
-            }
-            inputString.Clear().Append(result.ToString());
-            historyString.Append(secondArgument.ToString()).Append(" ").Append("=").Append(" ");
+
+        }
+        else
+        {
+            IBiargumentalOperation biargumentalOperation = (IBiargumentalOperation)calculator.CurrentOperation;
+            biargumentalOperation.FirstArgument = firstArgument;
+            biargumentalOperation.SecondArgument = (double)secondArgument;
+
+            firstArgument = calculator.Calculate();
+
+            inputString = new StringBuilder(firstArgument.ToString());
+            historyString = new StringBuilder(calculator.CurrentOperation.ToString());
+
             isFirstInput = true;
+
         }
+    }
+
+    private void OnDeleteClick()
+    {
+        if (inputString.Length > 0)
+            inputString.Length--;
+
     }
 }
